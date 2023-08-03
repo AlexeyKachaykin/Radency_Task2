@@ -1,30 +1,47 @@
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 import { editNote, addNote } from '../../store/noteSlice';
-import "./NoteForm.css"
+import './NoteForm.css';
+import { Note } from '../../types/Note';
 const createdDate = new Date();
-const createdDateString = createdDate.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
+const createdDateString = createdDate.toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+});
 
 interface NoteFormProps {
     editNoteId: number | null;
     setEditNoteId: React.Dispatch<React.SetStateAction<number | null>>;
     handleCloseModal: () => void;
 }
-const NoteForm: React.FC<NoteFormProps> = ({ editNoteId, setEditNoteId, handleCloseModal }) => {
 
+const NoteForm: React.FC<NoteFormProps> = ({ editNoteId, setEditNoteId, handleCloseModal }) => {
     const [noteName, setNoteName] = useState('');
     const [noteCategory, setNoteCategory] = useState('');
     const [noteContent, setNoteContent] = useState('');
 
     const dispatch = useDispatch();
+    const notes = useSelector((state: RootState) => state.notes.notes);
 
+    useEffect(() => {
+        if (editNoteId !== null) {
+            const fetchedNote = fetchNoteDetails(editNoteId, notes);
+            setNoteName(fetchedNote.name);
+            setNoteCategory(fetchedNote.category);
+            setNoteContent(fetchedNote.content);
+        } else {
+            setNoteName('');
+            setNoteCategory('');
+            setNoteContent('');
+        }
+    }, [editNoteId, notes]);
 
     const handleSaveNote = (e: React.FormEvent) => {
         e.preventDefault();
 
         if (editNoteId !== null) {
-
             dispatch(
                 editNote({
                     id: editNoteId,
@@ -36,13 +53,11 @@ const NoteForm: React.FC<NoteFormProps> = ({ editNoteId, setEditNoteId, handleCl
                 })
             );
         } else {
-
             dispatch(
                 addNote({
                     id: Date.now(),
                     name: noteName,
                     created: createdDateString,
-
                     category: noteCategory,
                     content: noteContent,
                     archived: false,
@@ -50,15 +65,22 @@ const NoteForm: React.FC<NoteFormProps> = ({ editNoteId, setEditNoteId, handleCl
             );
         }
 
-
         setNoteName('');
         setNoteCategory('');
         setNoteContent('');
         setEditNoteId(null);
+        handleCloseModal();
     };
 
-
-
+    
+    const fetchNoteDetails = (id: number, notes: Note[]): Note => {
+        const foundNote = notes.find((note) => note.id === id);
+        if (foundNote) {
+            return foundNote;
+        } else {
+            return { id: 0, name: '', category: '', content: '', created: '', archived: false };
+        }
+    };
 
     return (
         <div className="note-form-container">
@@ -99,7 +121,6 @@ const NoteForm: React.FC<NoteFormProps> = ({ editNoteId, setEditNoteId, handleCl
                 </div>
                 <div className="form-buttons">
                     <button type="submit">{editNoteId !== null ? 'Save' : 'Create'}</button>
-
                 </div>
             </form>
         </div>
