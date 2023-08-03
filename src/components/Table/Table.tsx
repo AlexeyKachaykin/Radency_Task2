@@ -3,8 +3,10 @@ import './Table.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArchive, faTrash, } from '@fortawesome/free-solid-svg-icons';
 interface TableProps {
-  data: any[];
-  columns: string[]; 
+  data: {
+    [key: string]: string | number | JSX.Element;
+  }[];
+  columns: string[];
 }
 
 const Table: React.FC<TableProps> = ({ data, columns }) => {
